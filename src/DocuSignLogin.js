@@ -51,6 +51,7 @@ export default function DocuSignLogin() {
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [showAddRecipients, setShowAddRecipients] = useState(false);
   const [showEnvelopeDetails, setShowEnvelopeDetails] = useState(false);
+  const [ownerAdded, setOwnerAdded] = useState(false);
   const [recipients, setRecipients] = useState([]);
   const [subject, setSubject] = useState("");
   const [documentName, setDocumentName] = useState("");
@@ -72,7 +73,14 @@ export default function DocuSignLogin() {
     setRecipients(fields);
     // setDateTabs(fields);
   }
-
+  function handleRemoveDateTabs(i) {
+    const fields = [...recipients];
+    fields[i]["tabs"]["dateTabs"] === undefined
+      ? (fields[i]["tabs"]["dateTabs"] = [])
+      : (fields[i]["tabs"]["dateTabs"] = fields[i]["tabs"]["dateTabs"]);
+    fields[i]["tabs"]["dateTabs"].splice(i, 1);
+    setRecipients(fields);
+  }
   function handleChangeDateTabs(i, event, di) {
     const fields = [...recipients];
     fields[i]["tabs"]["dateTabs"][di][event.target.name] = event.target.value;
@@ -93,7 +101,14 @@ export default function DocuSignLogin() {
     console.log(fields);
     setRecipients(fields);
   }
-
+  function handleRemoveSignHereTabs(i) {
+    const fields = [...recipients];
+    fields[i]["tabs"]["signHereTabs"] === undefined
+      ? (fields[i]["tabs"]["signHereTabs"] = [])
+      : (fields[i]["tabs"]["signHereTabs"] = fields[i]["tabs"]["signHereTabs"]);
+    fields[i]["tabs"]["signHereTabs"].splice(i, 1);
+    setRecipients(fields);
+  }
   function handleChangeSignHereTabs(i, event, shi) {
     const fields = [...recipients];
     fields[i]["tabs"]["signHereTabs"][shi][event.target.name] =
@@ -114,6 +129,15 @@ export default function DocuSignLogin() {
       anchorCaseSensitive: true,
     });
     console.log(fields);
+    setRecipients(fields);
+  }
+  function handleRemoveInitialHereTabs(i) {
+    const fields = [...recipients];
+    fields[i]["tabs"]["initialHereTabs"] === undefined
+      ? (fields[i]["tabs"]["initialHereTabs"] = [])
+      : (fields[i]["tabs"]["initialHereTabs"] =
+          fields[i]["tabs"]["initialHereTabs"]);
+    fields[i]["tabs"]["initialHereTabs"].splice(i, 1);
     setRecipients(fields);
   }
 
@@ -139,6 +163,14 @@ export default function DocuSignLogin() {
     setRecipients(fields);
   }
 
+  function handleRemoveTextTabs(i) {
+    const fields = [...recipients];
+    fields[i]["tabs"]["textTabs"] === undefined
+      ? (fields[i]["tabs"]["textTabs"] = [])
+      : (fields[i]["tabs"]["textTabs"] = fields[i]["tabs"]["textTabs"]);
+    fields[i]["tabs"]["textTabs"].splice(i, 1);
+    setRecipients(fields);
+  }
   function handleChangeTextTabs(i, event, ti) {
     const fields = [...recipients];
     fields[i]["tabs"]["textTabs"][ti][event.target.name] = event.target.value;
@@ -154,14 +186,32 @@ export default function DocuSignLogin() {
     });
     setRecipients(fields);
   }
-  function handleAddOwnerToRecipients() {
+  function handleAddOwnerToRecipients(e) {
+    console.log(e.target.value);
+    console.log(e.target.value === "false");
+    if (e.target.value === "false") {
+      console.log("in false");
+      const fields = [...recipients];
+      fields.push({
+        name: userInfo.name,
+        email: userInfo.email,
+        recipientId: "",
+        tabs: {},
+      });
+      setRecipients(fields);
+    } else {
+      console.log("in true");
+      handleRemoveOwnerFromRecipients();
+    }
+  }
+  function handleRemoveOwnerFromRecipients() {
     const fields = [...recipients];
-    fields.push({
-      name: userInfo.name,
-      email: userInfo.email,
-      recipientId: "",
-      tabs: {},
-    });
+    for (let x = 0; x < fields.length; x++) {
+      if (fields[x].email === userInfo.email) {
+        fields.splice(x, 1);
+      }
+    }
+
     setRecipients(fields);
   }
   function handleRemoveRecipients(i) {
@@ -237,7 +287,6 @@ export default function DocuSignLogin() {
                 <Col
                   xs={2}
                   style={{
-                    padding: "3.5rem",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -277,9 +326,10 @@ export default function DocuSignLogin() {
                       >
                         <Row>
                           <Col>Anchor String</Col>
-                          <Col>Units</Col>
+                          <Col>Offset Units</Col>
                           <Col>X OffSet</Col>
                           <Col>Y Offset</Col>
+                          <Col>Delete</Col>
                         </Row>
 
                         {recipient.tabs.dateTabs.map((dateTab, i) => (
@@ -300,6 +350,7 @@ export default function DocuSignLogin() {
                                 type="text"
                                 className="form-control"
                                 name="anchorUnits"
+                                placeholder="pixels/inches"
                                 value={dateTab.anchorUnits}
                                 onChange={(e) =>
                                   handleChangeDateTabs(idx, e, i)
@@ -314,7 +365,13 @@ export default function DocuSignLogin() {
                                 onChange={(e) =>
                                   handleChangeDateTabs(idx, e, i)
                                 }
-                              />
+                              />{" "}
+                              <div style={{ fontSize: "10px" }}>
+                                {" "}
+                                +ve value to move the tab left horizontally{" "}
+                                <br />
+                                -ve value to move the tab right horizontally
+                              </div>
                             </Col>
                             <Col>
                               <input
@@ -324,6 +381,30 @@ export default function DocuSignLogin() {
                                 onChange={(e) =>
                                   handleChangeDateTabs(idx, e, i)
                                 }
+                              />
+                              <div style={{ fontSize: "10px" }}>
+                                {" "}
+                                +ve value to move the tab down vertically
+                                <br />
+                                -ve value to move the tab up vertically
+                              </div>
+                            </Col>
+                            <Col
+                              xs={2}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <img
+                                src={DeleteIcon}
+                                alt="Delete Icon"
+                                onClick={() => handleRemoveDateTabs(idx)}
+                                style={{
+                                  width: "15px",
+                                  height: "15px",
+                                }}
                               />
                             </Col>
                           </Row>
@@ -359,6 +440,7 @@ export default function DocuSignLogin() {
                           <Col>Units</Col>
                           <Col>X OffSet</Col>
                           <Col>Y Offset</Col>
+                          <Col>Delete</Col>
                         </Row>
 
                         {recipient.tabs.signHereTabs.map((signHereTab, i) => (
@@ -379,6 +461,7 @@ export default function DocuSignLogin() {
                                 type="text"
                                 className="form-control"
                                 name="anchorUnits"
+                                placeholder="pixels/inches"
                                 value={signHereTab.anchorUnits}
                                 onChange={(e) =>
                                   handleChangeSignHereTabs(idx, e, i)
@@ -393,7 +476,9 @@ export default function DocuSignLogin() {
                                 onChange={(e) =>
                                   handleChangeSignHereTabs(idx, e, i)
                                 }
-                              />
+                              />{" "}
+                              +ve value to move the tab left horizontally -ve
+                              valye to move the tab right horizontally
                             </Col>
                             <Col>
                               <input
@@ -404,6 +489,30 @@ export default function DocuSignLogin() {
                                   handleChangeSignHereTabs(idx, e, i)
                                 }
                               />
+                              <div style={{ fontSize: "10px" }}>
+                                {" "}
+                                +ve value to move the tab down vertically
+                                <br />
+                                -ve value to move the tab up vertically
+                              </div>
+                              <Col
+                                xs={2}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={DeleteIcon}
+                                  alt="Delete Icon"
+                                  onClick={() => handleRemoveSignHereTabs(idx)}
+                                  style={{
+                                    width: "15px",
+                                    height: "15px",
+                                  }}
+                                />
+                              </Col>
                             </Col>
                           </Row>
                         ))}
@@ -438,6 +547,7 @@ export default function DocuSignLogin() {
                           <Col>Units</Col>
                           <Col>X OffSet</Col>
                           <Col>Y Offset</Col>
+                          <Col>Delete</Col>
                         </Row>
 
                         {recipient.tabs.textTabs.map((textTab, i) => (
@@ -458,6 +568,7 @@ export default function DocuSignLogin() {
                                 type="text"
                                 className="form-control"
                                 name="anchorUnits"
+                                placeholder="pixels/inches"
                                 value={textTab.anchorUnits}
                                 onChange={(e) =>
                                   handleChangeTextTabs(idx, e, i)
@@ -472,7 +583,9 @@ export default function DocuSignLogin() {
                                 onChange={(e) =>
                                   handleChangeTextTabs(idx, e, i)
                                 }
-                              />
+                              />{" "}
+                              +ve value to move the tab left horizontally -ve
+                              valye to move the tab right horizontally
                             </Col>
                             <Col>
                               <input
@@ -483,6 +596,30 @@ export default function DocuSignLogin() {
                                   handleChangeTextTabs(idx, e, i)
                                 }
                               />
+                              <div style={{ fontSize: "10px" }}>
+                                {" "}
+                                +ve value to move the tab down vertically
+                                <br />
+                                -ve value to move the tab up vertically
+                              </div>
+                              <Col
+                                xs={2}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={DeleteIcon}
+                                  alt="Delete Icon"
+                                  onClick={() => handleRemoveTextTabs(idx)}
+                                  style={{
+                                    width: "15px",
+                                    height: "15px",
+                                  }}
+                                />
+                              </Col>
                             </Col>
                           </Row>
                         ))}
@@ -517,6 +654,7 @@ export default function DocuSignLogin() {
                           <Col>Units</Col>
                           <Col>X OffSet</Col>
                           <Col>Y Offset</Col>
+                          <Col>Delete</Col>
                         </Row>
 
                         {recipient.tabs.initialHereTabs.map(
@@ -538,6 +676,7 @@ export default function DocuSignLogin() {
                                   type="text"
                                   className="form-control"
                                   name="anchorUnits"
+                                  placeholder="pixels/inches"
                                   value={initialHereTab.anchorUnits}
                                   onChange={(e) =>
                                     handleChangeInitialHereTabs(idx, e, i)
@@ -552,7 +691,9 @@ export default function DocuSignLogin() {
                                   onChange={(e) =>
                                     handleChangeInitialHereTabs(idx, e, i)
                                   }
-                                />
+                                />{" "}
+                                +ve value to move the tab left horizontally -ve
+                                valye to move the tab right horizontally
                               </Col>
                               <Col>
                                 <input
@@ -562,6 +703,32 @@ export default function DocuSignLogin() {
                                   onChange={(e) =>
                                     handleChangeInitialHereTabs(idx, e, i)
                                   }
+                                />
+                                <div style={{ fontSize: "10px" }}>
+                                  {" "}
+                                  +ve value to move the tab down vertically
+                                  <br />
+                                  -ve value to move the tab up vertically
+                                </div>
+                              </Col>
+                              <Col
+                                xs={2}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={DeleteIcon}
+                                  alt="Delete Icon"
+                                  onClick={() =>
+                                    handleRemoveInitialHereTabs(idx)
+                                  }
+                                  style={{
+                                    width: "15px",
+                                    height: "15px",
+                                  }}
                                 />
                               </Col>
                             </Row>
@@ -1162,7 +1329,11 @@ export default function DocuSignLogin() {
               <label>Send for owner to sign &nbsp;</label>
               <input
                 type="checkbox"
-                onClick={() => handleAddOwnerToRecipients()}
+                value={ownerAdded}
+                onClick={(e) => {
+                  setOwnerAdded(!ownerAdded);
+                  handleAddOwnerToRecipients(e);
+                }}
               />
             </Col>
             <Col className="mx-2 my-3"></Col>
